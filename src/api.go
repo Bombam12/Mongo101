@@ -52,6 +52,7 @@ func getUserByID(c echo.Context) error  {
 func saveUser(c echo.Context) error  {
      user:=new(User)
      err:= c.Bind(user)
+		 
      if err != nil{
         //  myName:= User{
         //      "Pornthip",
