@@ -1,0 +1,4 @@
+C:\Program Files\MongoDB\Server\3.4\bin  /// set envpath in mycom
+create data foder in D: /////   mkdir -p data/db
+
+start mongo ////$ mongod --dbpath=data/db
