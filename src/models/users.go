@@ -38,3 +38,10 @@ func (u *User)ReadFromDB()  ([]User, error){
       }
       return u, nil
     }
+    func (u *User)DeleteUserByID()(*User, error){
+      err := db.UsersCollection.RemoveId(u.Id)
+      if err != nil{
+        return nil, err
+      }
+      return u, nil
+    }

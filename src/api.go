@@ -25,7 +25,13 @@ func getUsers(c echo.Context) error  {
 	result, _ := user.ReadFromDB()
   return c.JSON(http.StatusOK,result)
 }
-
+func deleteUserByID(c echo.Context) error  {
+	user := new(models.User)
+  id:=c.Param("id")
+	user.Id = bson.ObjectIdHex(id)
+	user.DeleteUserByID()
+  	return c.NoContent(http.StatusOK)
+}
 func getUserByID(c echo.Context) error  {
 	user := new(models.User)
   id:=c.Param("id")
@@ -49,6 +55,8 @@ func saveUser(c echo.Context) error  {
      user.SaveToDB()
      return c.JSON(http.StatusOK, user)
 }
+
+
 
 func init()  {
 	mongoSession, err := mgo.Dial("localhost:27017")
@@ -76,6 +84,7 @@ defer db.MongoSession.Close()
   e.GET("/users",getUsers)
   e.GET("/users/:id",getUserByID)
   e.POST("/users",saveUser)
+	e.DELETE("/users/:id",deleteUserByID)
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello, World!")
 	})
