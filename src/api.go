@@ -4,55 +4,40 @@ import (
 	"net/http"
 
 	 "github.com/labstack/echo"
+	 "github.com/labstack/echo/middleware"
 	 "gopkg.in/mgo.v2"
-	//"gopkg.in/mgo.v2/bson"
+   "gopkg.in/mgo.v2/bson"
+
+	 db "./helper/db"
+	 "./models"
 )
  var (
 	 MongoSession *mgo.Session
 	 UsersCollection *mgo.Collection
  )
 
-type User struct{
-  First string  `json:"first"`
-  Last string   `json:"last"`
-}
-
-func (u *User)SaveToDB() error  { //this is call method recever
-    err := UsersCollection.Insert(&u)
-		if err != nil{
-			return err
-		}
-		return nil
-}
-
-func (u *User)ReadFromDB()  ([]User, error){
-	   result := []User{}
-			err := UsersCollection.Find(nil).All(&result)
-			if err != nil{
-				return nil, err
-			}
-			return result, nil
-		}
-
 func index(c echo.Context) error  {
   	return c.JSON(http.StatusOK, "Hello, World!")
 }
 
 func getUsers(c echo.Context) error  {
-  user := new(User)
+  user := new(models.User)
 	result, _ := user.ReadFromDB()
   return c.JSON(http.StatusOK,result)
 }
 
 func getUserByID(c echo.Context) error  {
+	user := new(models.User)
   id:=c.Param("id")
-  	return c.JSON(http.StatusOK,id)
+	user.Id = bson.ObjectIdHex(id)
+	result, _ := user.ReadFromDBByID()
+  	return c.JSON(http.StatusOK, result)
 }
 
 func saveUser(c echo.Context) error  {
-     user:=new(User)
+     user:=new(models.User)
      err:= c.Bind(user)
-		 
+
      if err != nil{
         //  myName:= User{
         //      "Pornthip",
@@ -66,19 +51,27 @@ func saveUser(c echo.Context) error  {
 }
 
 func init()  {
-	MongoSession, err := mgo.Dial("localhost:27017")
+	mongoSession, err := mgo.Dial("localhost:27017")
 	  if err != nil {
 			panic(err)
 		}
-		MongoSession.SetMode(mgo.Monotonic, true)
-		UsersCollection = MongoSession.DB("maejo").C("users")
+		mongoSession.SetMode(mgo.Monotonic, true)
+		db.MongoSession = mongoSession
+		db.UsersCollection = db.MongoSession.DB("maejo").C("users")
+
 }
 
 func main() {
-defer MongoSession.Close()
+defer db.MongoSession.Close()
 
 	e := echo.New()
-
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		  AllowOrigins: []string{"*"},
+		  AllowHeaders: []string{
+				echo.GET,
+				echo.POST,
+			},
+	}))
   e.GET("/index",index)
   e.GET("/users",getUsers)
   e.GET("/users/:id",getUserByID)
